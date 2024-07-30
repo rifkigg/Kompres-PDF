@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['pdf'])) {
     </style>
 </head>
 <body class="bg-secondary">
-    <div class="container d-flex justify-content-center align-items-center full-height ">
+    <div class="container d-flex flex-column gap-5 justify-content-center align-items-center full-height ">
         <div class="text-center bg-light rounded p-5">
             <h1>Upload PDF Untuk di Kompress</h1>
             <form method="post" enctype="multipart/form-data">
@@ -51,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['pdf'])) {
                 <input type="submit" value="Compress PDF" class="btn btn-primary mt-3 w-100">
             </form>
         </div>
+        <h6>Copyright @ 2024 - M Rifki Adi Setiawan - Coded with ❤️</h6>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
