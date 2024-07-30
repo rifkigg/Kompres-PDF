@@ -61,9 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['pdf'])) {
                 <input type="file" name="pdf" class="form-control" required>
                 <label for="compression_level" class="form-label mt-3">Pilih Tingkat Kompresi:</label>
                 <select name="compression_level" class="form-control" required>
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
+                    <option value="low">Low | Rendah</option>
+                    <option value="medium">Medium | Sedang</option>
+                    <option value="high">High | Tinggi</option>
                 </select>
                 <input type="submit" value="Compress PDF" class="btn btn-primary mt-3 w-100">
             </form>
