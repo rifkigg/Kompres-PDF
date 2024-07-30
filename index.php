@@ -1,10 +1,19 @@
 <?php
-function compressPdfWithGhostscript($inputFile, $outputFile) {
+function compressPdfWithGhostscript($inputFile, $outputFile, $compressionLevel) {
     // Path ke executable Ghostscript di Windows
     $gsPath = 'C:\Program Files\gs\gs10.03.1\bin\gswin64c.exe'; // Ganti dengan path ke Ghostscript di sistem Anda
 
+    // Mapping tingkat kompresi ke PDFSETTINGS Ghostscript
+    $compressionSettings = [
+        'low' => '/screen',
+        'medium' => '/ebook',
+        'high' => '/prepress'
+    ];
+
+    $pdfSettings = $compressionSettings[$compressionLevel];
+
     // Perintah untuk mengompres PDF menggunakan Ghostscript
-    $command = "\"$gsPath\" -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/screen -dNOPAUSE -dQUIET -dBATCH -sOutputFile=\"$outputFile\" \"$inputFile\"";
+    $command = "\"$gsPath\" -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=$pdfSettings -dNOPAUSE -dQUIET -dBATCH -sOutputFile=\"$outputFile\" \"$inputFile\"";
 
     // Menjalankan perintah
     exec($command, $output, $return_var);
@@ -17,9 +26,10 @@ function compressPdfWithGhostscript($inputFile, $outputFile) {
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['pdf'])) {
     $inputFile = $_FILES['pdf']['tmp_name'];
     $outputFile = 'compressed_' . $_FILES['pdf']['name'];
+    $compressionLevel = $_POST['compression_level'];
 
     try {
-        compressPdfWithGhostscript($inputFile, $outputFile);
+        compressPdfWithGhostscript($inputFile, $outputFile, $compressionLevel);
 
         header('Content-Type: application/pdf');
         header('Content-Disposition: attachment; filename="' . basename($outputFile) . '"');
@@ -44,10 +54,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['pdf'])) {
 </head>
 <body class="bg-secondary">
     <div class="container d-flex flex-column gap-5 justify-content-center align-items-center full-height ">
-        <div class="text-center bg-light rounded p-5">
+        <div class="bg-light rounded p-5">
             <h1>Upload PDF Untuk di Kompress</h1>
             <form method="post" enctype="multipart/form-data">
+                <label for="pdf" class="form-label mt-3">Pilih File PDF:</label>
                 <input type="file" name="pdf" class="form-control" required>
+                <label for="compression_level" class="form-label mt-3">Pilih Tingkat Kompresi:</label>
+                <select name="compression_level" class="form-control" required>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                </select>
                 <input type="submit" value="Compress PDF" class="btn btn-primary mt-3 w-100">
             </form>
         </div>
