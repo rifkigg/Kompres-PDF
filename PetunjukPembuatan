@@ -1,0 +1,36 @@
+- Pertama harus install GhostScript dibawah ini adalah tutorialnya
+
+- Windows
+Unduh Ghostscript:
+Kunjungi situs resmi Ghostscript.
+Pilih versi Windows dan unduh file instalasi.
+2. Instal Ghostscript:
+Jalankan file instalasi yang telah diunduh.
+Ikuti petunjuk instalasi hingga selesai.
+3. Verifikasi Instalasi:
+Buka Command Prompt.
+Ketik gswin64c -v dan tekan Enter.
+Jika terinstal dengan benar, Anda akan melihat informasi versi Ghostscript.
+
+- macOS
+Menggunakan Homebrew:
+Buka Terminal.
+Ketik brew install ghostscript dan tekan Enter.
+2. Verifikasi Instalasi:
+Ketik gs -v di Terminal dan tekan Enter.
+Jika terinstal dengan benar, Anda akan melihat informasi versi Ghostscript.
+
+- Linux
+1. Debian/Ubuntu:
+Buka Terminal.
+Ketik sudo apt-get update dan tekan Enter.
+Ketik sudo apt-get install ghostscript dan tekan Enter.
+Fedora:
+Buka Terminal.
+Ketik sudo dnf install ghostscript dan tekan Enter.
+3. Verifikasi Instalasi:
+Ketik gs -v di Terminal dan tekan Enter.
+Jika terinstal dengan benar, Anda akan melihat informasi versi Ghostscript.
+
+- Lalu sesuaikan path GhostScript pada variable sgPath
+lalu jalankan
