@@ -1,10 +1,7 @@
 <?php
 function compressPdfWithGhostscript($inputFile, $outputFile, $compressionLevel) {
-    // Deteksi sistem operasi
-    $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
-
     // Path ke executable Ghostscript
-    $gsPath = $isWindows ? 'C:\Program Files\gs\gs10.03.1\bin\gswin64c.exe' : '/usr/bin/gs';
+    $gsPath = '/usr/bin/gs';
 
     // Mapping tingkat kompresi ke PDFSETTINGS Ghostscript
     $compressionSettings = [
@@ -15,11 +12,15 @@ function compressPdfWithGhostscript($inputFile, $outputFile, $compressionLevel) 
 
     $pdfSettings = $compressionSettings[$compressionLevel];
 
+    // Escape file paths
+    $escapedInputFile = escapeshellarg($inputFile);
+    $escapedOutputFile = escapeshellarg($outputFile);
+
     // Perintah untuk mengompres PDF menggunakan Ghostscript
-    $command = "\"$gsPath\" -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=$pdfSettings -dNOPAUSE -dQUIET -dBATCH -sOutputFile=\"$outputFile\" \"$inputFile\"";
+    $command = "$gsPath -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=$pdfSettings -dNOPAUSE -dQUIET -dBATCH -sOutputFile=$escapedOutputFile $escapedInputFile";
 
     // Menjalankan perintah
-    exec($command, $output, $return_var);
+    exec($command . ' 2>&1', $output, $return_var);
 
     if ($return_var !== 0) {
         throw new Exception("Ghostscript command failed: " . implode("\n", $output));
