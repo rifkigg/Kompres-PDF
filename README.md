@@ -30,7 +30,7 @@ Menggunakan Homebrew:
 <li>Debian/Ubuntu:</li>
 Buka Terminal.
 Ketik "sudo apt-get update" (tanpa menggunakan tanda petik) dan tekan Enter.
-Ketik "sudo apt-get install" (tanpa menggunakan tanda petik) ghostscript dan tekan Enter.
+Ketik "sudo apt-get install ghostscript" (tanpa menggunakan tanda petik) dan tekan Enter.
 <li>Fedora:</li>
 Buka Terminal.
 Ketik sudo dnf install ghostscript dan tekan Enter.

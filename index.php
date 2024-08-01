@@ -1,7 +1,10 @@
 <?php
 function compressPdfWithGhostscript($inputFile, $outputFile, $compressionLevel) {
-    // Path ke executable Ghostscript di Windows
-    $gsPath = 'C:\Program Files\gs\gs10.03.1\bin\gswin64c.exe'; // Ganti dengan path ke Ghostscript di sistem Anda
+    // Deteksi sistem operasi
+    $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+
+    // Path ke executable Ghostscript
+    $gsPath = $isWindows ? 'C:\Program Files\gs\gs10.03.1\bin\gswin64c.exe' : '/usr/bin/gs';
 
     // Mapping tingkat kompresi ke PDFSETTINGS Ghostscript
     $compressionSettings = [
