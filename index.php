@@ -1,9 +1,7 @@
 <?php
 function compressPdfWithGhostscript($inputFile, $outputFile, $compressionLevel) {
-    // Path ke executable Ghostscript
     $gsPath = '/usr/bin/gs';
 
-    // Mapping tingkat kompresi ke PDFSETTINGS Ghostscript
     $compressionSettings = [
         'low' => '/screen',
         'medium' => '/ebook',
@@ -11,15 +9,10 @@ function compressPdfWithGhostscript($inputFile, $outputFile, $compressionLevel) 
     ];
 
     $pdfSettings = $compressionSettings[$compressionLevel];
-
-    // Escape file paths
     $escapedInputFile = escapeshellarg($inputFile);
     $escapedOutputFile = escapeshellarg($outputFile);
 
-    // Perintah untuk mengompres PDF menggunakan Ghostscript
     $command = "$gsPath -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=$pdfSettings -dNOPAUSE -dQUIET -dBATCH -sOutputFile=$escapedOutputFile $escapedInputFile";
-
-    // Menjalankan perintah
     exec($command . ' 2>&1', $output, $return_var);
 
     if ($return_var !== 0) {
@@ -27,30 +20,82 @@ function compressPdfWithGhostscript($inputFile, $outputFile, $compressionLevel) 
     }
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['pdf'])) {
-    $inputFile = $_FILES['pdf']['tmp_name'];
-    $outputFile = '/tmp/compressed_' . $_FILES['pdf']['name'];
-    $compressionLevel = $_POST['compression_level'];
-
-    // Cek hak akses direktori
-    if (!is_writable(_DIR_)) {
-        die('Direktori tidak dapat ditulis.');
+function createZipFromDirectory($directory, $outputZip) {
+    $zip = new ZipArchive();
+    if ($zip->open($outputZip, ZipArchive::CREATE) !== TRUE) {
+        throw new Exception("Cannot create zip file");
     }
 
-    try {
-        compressPdfWithGhostscript($inputFile, $outputFile, $compressionLevel);
-
-        if (file_exists($outputFile)) {
-            header('Content-Type: application/pdf');
-            header('Content-Disposition: attachment; filename="' . basename($outputFile) . '"');
-            readfile($outputFile);
-            unlink($outputFile); // Menghapus file setelah dikirim
-        } else {
-            echo 'File tidak ditemukan: ' . $outputFile;
+    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory, RecursiveDirectoryIterator::SKIP_DOTS), RecursiveIteratorIterator::LEAVES_ONLY);
+    foreach ($files as $file) {
+        if ($file->isFile()) {
+            $filePath = $file->getRealPath();
+            $relativePath = basename($filePath);
+            $zip->addFile($filePath, $relativePath);
         }
-    } catch (Exception $e) {
-        echo 'Error: ' . $e->getMessage();
     }
+
+    $zip->close();
+}
+
+function deleteDirectory($dir) {
+    if (!is_dir($dir)) {
+        return;
+    }
+    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
+    foreach ($files as $fileinfo) {
+        $todo = ($fileinfo->isDir() ? 'rmdir' : 'unlink');
+        $todo($fileinfo->getRealPath());
+    }
+    rmdir($dir);
+}
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['archive'])) {
+    $compressionLevel = $_POST['compression_level'];
+    $archivePath = $_FILES['archive']['tmp_name'];
+    $extractPath = 'extracted';
+    $compressedPath = 'compressed_pdfs';
+
+    // Create directories for extraction and compressed files
+    if (!file_exists($extractPath)) {
+        mkdir($extractPath, 0777, true);
+    }
+    if (!file_exists($compressedPath)) {
+        mkdir($compressedPath, 0777, true);
+    }
+
+    // Extract the zip or rar archive
+    $zip = new ZipArchive();
+    if ($zip->open($archivePath) === TRUE) {
+        $zip->extractTo($extractPath);
+        $zip->close();
+    } else {
+        throw new Exception("Failed to open zip file");
+    }
+
+    // Compress each PDF file in the extracted directory
+    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($extractPath, RecursiveDirectoryIterator::SKIP_DOTS), RecursiveIteratorIterator::LEAVES_ONLY);
+    foreach ($files as $file) {
+        if ($file->isFile() && strtolower(pathinfo($file->getFilename(), PATHINFO_EXTENSION)) === 'pdf') {
+            $inputFile = $file->getRealPath();
+            $outputFile = $compressedPath . '/compressed_' . $file->getFilename();
+            compressPdfWithGhostscript($inputFile, $outputFile, $compressionLevel);
+        }
+    }
+
+    // Create a zip file from the compressed PDFs folder
+    $finalZipPath = 'final_compressed_pdfs.zip';
+    createZipFromDirectory($compressedPath, $finalZipPath);
+
+    // Serve the final zip file to the user
+    header('Content-Type: application/zip');
+    header('Content-Disposition: attachment; filename="' . basename($finalZipPath) . '"');
+    readfile($finalZipPath);
+
+    // Clean up temporary files
+    deleteDirectory($extractPath);
+    deleteDirectory($compressedPath);
+    unlink($finalZipPath);
 }
 ?>
 
@@ -66,12 +111,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['pdf'])) {
     </style>
 </head>
 <body class="bg-secondary">
-    <div class="container d-flex flex-column gap-5 justify-content-center align-items-center full-height">
+    <div class="container d-flex flex-column gap-5 justify-content-center align-items-center full-height ">
         <div class="bg-light rounded p-5">
             <h1>Upload PDF Untuk di Kompress</h1>
             <form method="post" enctype="multipart/form-data">
-                <label for="pdf" class="form-label mt-3">Pilih File PDF:</label>
-                <input type="file" name="pdf" class="form-control" required>
+                <label for="archive" class="form-label mt-3">Pilih File ZIP:</label>
+                <input type="file" name="archive" class="form-control" required>
                 <label for="compression_level" class="form-label mt-3">Pilih Tingkat Kompresi:</label>
                 <select name="compression_level" class="form-control" required>
                     <option value="low">Low | Rendah</option>
