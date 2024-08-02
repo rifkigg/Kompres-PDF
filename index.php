@@ -29,16 +29,25 @@ function compressPdfWithGhostscript($inputFile, $outputFile, $compressionLevel) 
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['pdf'])) {
     $inputFile = $_FILES['pdf']['tmp_name'];
-    $outputFile = 'compressed_' . $_FILES['pdf']['name'];
+    $outputFile = '/tmp/compressed_' . $_FILES['pdf']['name'];
     $compressionLevel = $_POST['compression_level'];
+
+    // Cek hak akses direktori
+    if (!is_writable(_DIR_)) {
+        die('Direktori tidak dapat ditulis.');
+    }
 
     try {
         compressPdfWithGhostscript($inputFile, $outputFile, $compressionLevel);
 
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="' . basename($outputFile) . '"');
-        readfile($outputFile);
-        unlink($outputFile); // Menghapus file setelah dikirim
+        if (file_exists($outputFile)) {
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: attachment; filename="' . basename($outputFile) . '"');
+            readfile($outputFile);
+            unlink($outputFile); // Menghapus file setelah dikirim
+        } else {
+            echo 'File tidak ditemukan: ' . $outputFile;
+        }
     } catch (Exception $e) {
         echo 'Error: ' . $e->getMessage();
     }
@@ -57,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['pdf'])) {
     </style>
 </head>
 <body class="bg-secondary">
-    <div class="container d-flex flex-column gap-5 justify-content-center align-items-center full-height ">
+    <div class="container d-flex flex-column gap-5 justify-content-center align-items-center full-height">
         <div class="bg-light rounded p-5">
             <h1>Upload PDF Untuk di Kompress</h1>
             <form method="post" enctype="multipart/form-data">
